@@ -1,20 +1,13 @@
 var querystring = require("querystring");
+var multipart = require('multipart');
 var fs = require("fs");
 var http = require("http");
 var crypto = require("crypto");
+var authentication = require("./authentication");
 var sharedSecret, query, signature;
-
-var exec = require("child_process").exec;
 
 function start(response, postData) {
     console.log("Request handler 'start' was called.");
-
-    /* exec("find /",{ timeout: 10000, maxBuffer: 20000*1024 }, function (error, stdout, stderr) {
-       response.writeHead(200, {"Content-Type": "text/plain"});
-       response.write(stdout);
-       response.end();
-       }); 
-    */
 
     var body = '<html>'+
 	'<head>'+
@@ -22,49 +15,58 @@ function start(response, postData) {
 	'charset=UTF-8" />'+
 	'</head>'+
 	'<body>'+
-	'<form action="/upload" enctype="multipart/form-data" '+
+	'<form action="/flow" enctype="multipart/form-data" '+
 	'method="post">'+
-	'<br><textarea name="text" rows="20" cols="60"></textarea>'+
-	'<P><input type="file" name="upload"></P>'+
-	'<br><input type="submit" value="Submit" />'+
+	'<br>Please enter Flow instance URL without "http://": <input type="text" name="flowurl">'+
+	'<br>Please enter the Flow resource you are requesting: <input type="text" name="resource">'+
+	'<P>Please enter your secret key: <input type="text" name="secret"></P>'+
+	'<P>Please enter your access key: <input type="text" name="access_key"></P>'+
+	'<P><br><input type="submit" value="Submit" /></P>'+
 	'</form>'+
 	'</body>'+
 	'</html>';
 
     response.writeHead(200, {"Content-Type": "text/html"});
     response.write(body);
-    response.end();
-
-} 
-function authentication(response, postData){
-
-var access_key="jvCO1HsC4h182tNAGvrKNPS9j001Hjx40l4sHbTXTeY=";
-var secret="QKSWjDcBd2kzqqQFgT/8r0U4Keb/HoTgjqcGV1bLCEU=";
-d=$(date +%s);
-sig=$(printf "GET\n${d}\n/api/v1/question_answers" | openssl sha1 -binary -hmac "${secret}" | base64); 
-curl -H "Date: ${d}" -H "Authorization: ${access_key}:${sig}" http://training.akvoflow.org/api/v1/question_answers?surveyInstanceId=41996001
-
-
-
-
-    exec("",{ timeout: 10000, maxBuffer: 20000*1024 }, function (error, stdout, stderr) {
-	response.writeHead(200, {"Content-Type": "text/plain"});
-	response.write(stdout);
-	response.end();
-    }); 
-    
-
-
-    console.log("Authenticating to FLOW");
-    response.writeHead(200, {"Content-Type": "text/html"}); 
-    response.write("The list of Flow surveys: \n" + querystring.parse(postData).text);
-    response.end();
+    response.end(); 
 }
+function flow(response, postData){
+	multipart.parse(response).addCallback(function(postData) {
+        response.sendHeader(200, {'Content-Type': 'text/plain'});
+        response.sendBody(sys.inspect(parts));
+        response.finish();
+      });
+        }
 
+	//var opt = authentication.requestflowapi(response);
+	
+	//var options = opt(access_key, secret, url, resource);
+	/*
+	var request = http.request(options, function(response) {
+		console.log('STATUS: ' + response.statusCode);
+		console.log('HEADERS: ' + JSON.stringify(response.headers));
+		response.setEncoding('utf8');
+		response.on('data', function (chunk) {
+		console.log('BODY: ' + JSON.stringify(chunk));
+	*/		
+		
+			//return JSON.stringify(chunk);
+	/*	});
+	}).on('error', function(e) {
+	  console.log("There was an error, please read following message: " + e.message);
+	});
+	request.end();
+	
+	//var content = authentication.requestflowapi(response);
+	//console.log("content: " + content);
+	//response.writeHead(200, {"Content-Type": "text/html"});
+    //response.write(content);
+    //response.end(); */
+//}
 function upload(response, postData) {
     console.log("Request handler 'upload' was called.");
     response.writeHead(200, {"Content-Type": "text/plain"}); 
-    response.write("You have sent: \n" + querystring.parse(postData).text);
+    response.write("You have sent: \n" + querystring.parse(postData).secret);
     response.end();
 }
 
@@ -77,3 +79,4 @@ function show(response) {
 exports.start = start;
 exports.upload = upload;
 exports.show = show;
+exports.flow = flow;

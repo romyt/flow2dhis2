@@ -1,5 +1,6 @@
 var http = require("http");
 var url = require("url");
+var splitter = require('./splitter.js');
 
 function start(route, handle){
 	function onRequest(request, response) {
@@ -13,13 +14,24 @@ function start(route, handle){
 	    });
 	    
 	    request.addListener("end", function(){
-		route(handle, pathname, response, postData);
+			if (postData !== '')
+    		{
+        		var hash = splitter.formValues(postData);
+ 
+         		console.log("input1 = " + hash.flowurl);
+         		console.log("input2 = " + hash.secret);
+ 
+         	response.writeHead(200);
+         	response.write('Romain ' + postData);
+         	response.end();
+         	return;
+    	}	
 	    });
 
 	    console.log("Request for " + pathname + " received."); 
 	    
   	}
-	http.createServer(onRequest).listen(8888);
+	http.createServer(onRequest).listen(9999);
 	console.log("Server has started.");
 }
 exports.start = start;
