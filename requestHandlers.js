@@ -1,73 +1,82 @@
-var querystring = require("querystring");
-var multipart = require('multipart');
 var fs = require("fs");
 var http = require("http");
-var crypto = require("crypto");
-var authentication = require("./authentication");
-var sharedSecret, query, signature;
+var authentication = require('./authentication');
 
 function start(response, postData) {
     console.log("Request handler 'start' was called.");
-
-    var body = '<html>'+
-	'<head>'+
-	'<meta http-equiv="Content-Type" content="text/html; '+
-	'charset=UTF-8" />'+
-	'</head>'+
-	'<body>'+
-	'<form action="/flow" enctype="multipart/form-data" '+
-	'method="post">'+
-	'<br>Please enter Flow instance URL without "http://": <input type="text" name="flowurl">'+
-	'<br>Please enter the Flow resource you are requesting: <input type="text" name="resource">'+
-	'<P>Please enter your secret key: <input type="text" name="secret"></P>'+
-	'<P>Please enter your access key: <input type="text" name="access_key"></P>'+
-	'<P><br><input type="submit" value="Submit" /></P>'+
-	'</form>'+
-	'</body>'+
-	'</html>';
-
-    response.writeHead(200, {"Content-Type": "text/html"});
-    response.write(body);
-    response.end(); 
-}
-function flow(response, postData){
-	multipart.parse(response).addCallback(function(postData) {
-        response.sendHeader(200, {'Content-Type': 'text/plain'});
-        response.sendBody(sys.inspect(parts));
-        response.finish();
-      });
-        }
-
-	//var opt = authentication.requestflowapi(response);
-	
-	//var options = opt(access_key, secret, url, resource);
-	/*
-	var request = http.request(options, function(response) {
-		console.log('STATUS: ' + response.statusCode);
-		console.log('HEADERS: ' + JSON.stringify(response.headers));
-		response.setEncoding('utf8');
-		response.on('data', function (chunk) {
-		console.log('BODY: ' + JSON.stringify(chunk));
-	*/		
-		
-			//return JSON.stringify(chunk);
-	/*	});
-	}).on('error', function(e) {
-	  console.log("There was an error, please read following message: " + e.message);
+	fs.readFile('./html/form.html',function(error,data){ 
+    response.end(data, function(){
+		response.write(data);
+		});    
 	});
-	request.end();
+}
+
+function getData(response, postData){
+	console.log("Request handler 'getData' was called.");
 	
-	//var content = authentication.requestflowapi(response);
-	//console.log("content: " + content);
-	//response.writeHead(200, {"Content-Type": "text/html"});
-    //response.write(content);
-    //response.end(); */
-//}
-function upload(response, postData) {
-    console.log("Request handler 'upload' was called.");
-    response.writeHead(200, {"Content-Type": "text/plain"}); 
-    response.write("You have sent: \n" + querystring.parse(postData).secret);
-    response.end();
+	authentication.requestflowapi(postData, function(flowdata) {
+  // Here the value of flowdata is set.
+		var content = JSON.parse(flowdata);
+			var body1 = '<html>'+
+						'<head>'+
+						'</head>'+
+						'<body>'+
+							'<table>'+
+								'<tr>'+
+									'<th>'+
+										'Survey name'+
+									'</th>'+
+									'<th>'+
+										'Survey status'+
+									'</th>'+
+									'<th>'+
+										'Survey keyId'+
+									'</th>'+
+									'<th>'+
+										'Survey version'+
+									'</th>'+
+								'</tr>';
+				var body2 ='';
+				for(var i=0; i< content.surveys.length; i++){
+					if (content.surveys[i].status == 'PUBLISHED'){
+						body2 +=		
+								'<tr>'+
+									'<td>'+
+										'<a href="./question_answers?surveyId='+ content.surveys[i].keyId +'">' + content.surveys[i].name + '</a>'+
+									'</td>'+
+									'<td>'+
+										content.surveys[i].status +
+									'</td>'+
+									'<td>'+
+										content.surveys[i].keyId +
+									'</td>'+
+									'<td>'+
+										content.surveys[i].version +
+									'</td>'+
+								'</tr>';	
+					}	
+				}
+					var body3 =	
+							'</table>'+
+						'</body>'+
+						'</html>';
+
+					var body_complete = body1 + body2 + body3 ;
+					
+		response.writeHead(200, {"Content-Type": "text/html"}); 
+    	response.write(body_complete);
+		response.end();
+});
+}
+	
+function question_answers(response, postData) {
+    console.log("Request handler 'question_answers' was called.");
+	
+	authentication.requestflowapi(postData, function(flowdata) {
+		response.writeHead(200, {"Content-Type": "text/plain"}); 
+    	response.write("You have sent: \n" + querystring.parse(postData).secret);
+    	response.end();
+	});
 }
 
 function show(response) {
@@ -79,4 +88,4 @@ function show(response) {
 exports.start = start;
 exports.upload = upload;
 exports.show = show;
-exports.flow = flow;
+exports.getData = getData;

@@ -6,8 +6,8 @@ var handle = {};
 
 handle["/"] = requestHandlers.start;
 handle["/start"] = requestHandlers.start;
-handle["/flow"] = requestHandlers.flow;
-handle["/upload"] = requestHandlers.upload;
+handle["/getData"] = requestHandlers.getData;
+handle["/question_answers"] = requestHandlers.question_answers;
 handle["/show"] = requestHandlers.show;
 
 server.start(router.route, handle);

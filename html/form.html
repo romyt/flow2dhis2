@@ -1,0 +1,38 @@
+<!--page form.html in the nodeform folder in the current directory-->
+<!DOCTYPE html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Untitled Document</title>
+</head>
+ 
+<body>
+<form id="form1" name="form1" method="post" action="getData">
+  <p>
+  <label><label>Please Fill up the form and submit.<br />
+  </label>Please enter Flow instance URL without "http://":
+  <input type="text" name="flow_url" id="flow_url" placeholder="Please Input Flow URL" />
+    </label>
+  </p>
+  <p>
+    <label>Please enter the Flow resource you are requesting:
+        <input type="text" name="resource" id="resource" placeholder="Please Input resource" />
+    </label>
+  </p>
+  <p>
+	<label>Please enter your secret key:
+		<input type="text" name="secret" id="secret" placeholder="Please Input secret key" />
+	</label>
+  </p>
+  <p>
+	<label>Please enter your access key:
+		<input type="text" name="access_key" id="access_key" placeholder="Please Input access key" />
+	</label>
+  </p>
+  <p>
+    <label>
+      <input type="submit" name="submit" id="submit" value="Submit" />
+    </label>
+  </p>
+</form>
+</body>
+</html>
