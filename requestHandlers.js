@@ -86,6 +86,6 @@ function show(response) {
 }
 
 exports.start = start;
-exports.upload = upload;
+exports.question_answers = question_answers;
 exports.show = show;
 exports.getData = getData;
