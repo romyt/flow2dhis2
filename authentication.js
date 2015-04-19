@@ -4,16 +4,21 @@ var qs = require("querystring");
 //var access_key = "jvCO1HsC4h182tNAGvrKNPS9j001Hjx40l4sHbTXTeY=";
 //var secret = "QKSWjDcBd2kzqqQFgT/8r0U4Keb/HoTgjqcGV1bLCEU=";
 
-function requestflowapi(postdata, callback){
-	callback = (callback || noop);
+function requestflowapi(query, postdata, callback){
+	//callback = (callback || noop);
+	query = query || '';
 	var POST = qs.parse(postdata);
 	var access_key = POST.access_key; 
 	var secret_key = POST.secret; 
 	var url = POST.flow_url;
 	var resource = POST.resource;
-	
+	var path ='';
+	path = "/api/v1/" + resource;
+	if(query !==''){
+		path = "/api/v1/" + resource + '?' + query;
+	}
 	console.log("authentication module was called...");
-	//console.log("access_key: " + access_key + " secret_key: " + secret_key + " url: " + url + " resource: " + resource );
+	console.log("access_key: " + access_key + " secret_key: " + secret_key + " url: " + url + " path: " + path);
 	function generateSignature(string_to_sign, shared_secret) {
 		var hmac = crypto.createHmac('sha1', shared_secret);
 		return hmac.update(string_to_sign).digest('base64');
@@ -26,7 +31,7 @@ function requestflowapi(postdata, callback){
 	var options = {
 	  host: url,
 	  port: 80,
-	  path: "/api/v1/" + resource,
+	  path: path,
 	  method: "GET",
 	  headers: {
 		"Date": d,
