@@ -28,8 +28,8 @@ function start(route, handle){
 				});			
 			});
 		} 
-		else if(pathname !== '/favicon.ico' && request.method == 'GET'){
-			console.log("request.method = " + request.method);
+		else if(pathname !== '/' && pathname !== '/favicon.ico' && request.method == 'GET'){
+			console.log("request.method = " + request.method + "Pathname: " + pathname);
 			fs.readFile('.credentials', function (err, data) {
 			  	if (err) throw err;
 			  	postData = data.toString();
@@ -37,6 +37,16 @@ function start(route, handle){
 				postData = postData.replace('surveys', pathname_without_slash);
 				console.log("PostData value " + postData + " received from file!");
 				route(handle, pathname, query, response, postData);	
+			});
+		}
+		else{
+			request.addListener("data", function(postDataChunk){
+			postData += postDataChunk;
+			console.log("Received POST data chunk '"+ postDataChunk + "'.");	    
+			});
+
+			request.addListener("end", function(){
+			route(handle, pathname, response, postData);
 			});
 		}
 		console.log("Request for " + pathname + " received."); 

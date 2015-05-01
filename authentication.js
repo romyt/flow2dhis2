@@ -1,11 +1,17 @@
+/*
+*This file is part of flow2dhis2. The purpose if the program is to send data collected using Akvo FLOW to a DHIS2 instance
+*Copyright (C) 2015 Tohouri.com
+*flow2dhis2 is free software: you can redistribute it and modify it under the terms of the GNU Affero General Public License (AGPL) as published by the Free Software Foundation, either version 3 of the License or any later version.
+*flow2dhis2 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License included below for more details.
+*ßThe license can also be seen at http://www.gnu.org/licenses/agpl.html.
+*/
+
 var crypto = require('crypto');
 var http = require('http');
 var qs = require("querystring");
-//var access_key = "jvCO1HsC4h182tNAGvrKNPS9j001Hjx40l4sHbTXTeY=";
-//var secret = "QKSWjDcBd2kzqqQFgT/8r0U4Keb/HoTgjqcGV1bLCEU=";
 
 function requestflowapi(query, postdata, callback){
-	//callback = (callback || noop);
+	
 	query = query || '';
 	var POST = qs.parse(postdata);
 	var access_key = POST.access_key; 
@@ -57,4 +63,5 @@ function requestflowapi(query, postdata, callback){
 	});
 	request.end();
 }
+
 exports.requestflowapi = requestflowapi;

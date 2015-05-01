@@ -1,14 +1,14 @@
 function route(handle, pathname, query, response, postData) {
-
-    console.log("About to route a request for " + pathname);
-    if (typeof handle[pathname] === 'function'){
-	handle[pathname](query, response, postData);
+		console.log("About to route a request for " + pathname);
+		if (typeof handle[pathname] === 'function'){
+		handle[pathname](query, response, postData);
     }
     else{
-	console.log("No request handler found for " + pathname);
-	response.writeHead(200, {"Content-Type": "text/plain"}); 
-	response.write("error 404 Not found!");
-  	response.end();
+		if (pathname !=='/favicon.ico'){
+			console.log("No request handler found for " + pathname);
+		response.writeHead(200, {"Content-Type": "text/plain"}); 
+		response.write("error 404 Not found!");
+		response.end();}
     }
 }
 

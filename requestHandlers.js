@@ -1,6 +1,17 @@
+/*
+*This file is part of flow2dhis2. The purpose if the program is to send data collected using Akvo FLOW to a DHIS2 instance
+*Copyright (C) 2015 Tohouri.com
+*flow2dhis2 is free software: you can redistribute it and modify it under the terms of the GNU Affero General Public License (AGPL) as published by the Free Software Foundation, either version 3 of the License or any later version.
+*flow2dhis2 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License included below for more details.
+*ßThe license can also be seen at http://www.gnu.org/licenses/agpl.html.
+*/
+
 var fs = require("fs");
 var http = require("http");
+var qs = require("querystring");
 var authentication = require('./authentication');
+var exec = require("child_process").exec;
+var parseString = require('xml2js').parseString;
 
 function start(response, postData) {
     console.log("Request handler 'start' was called.");
@@ -142,7 +153,7 @@ function survey_instances(query, response, postData) {
 
 function question_answers(query, response, postData) {
     console.log("Request handler 'question_answers' was called.");
-	console.log("$$$$$$$$$ Parameters $$$$$$$$ " + query + " / " + postData);
+	//console.log("$$$$$$$$$ Parameters $$$$$$$$ " + query + " / " + postData);
 	
 	authentication.requestflowapi(query, postData, function(flowdata) {
 	console.log("Survey questions answers received !");
@@ -204,10 +215,142 @@ function question_answers(query, response, postData) {
 }
 
 function sendData(query, response, postData) {
-    console.log("Request handler 'show' was called.");
-    response.writeHead(200, {"Content-Type": "image/png"});
-    fs.createReadStream("/tmp/test.jpg").pipe(response);
-}
+	var POST = qs.parse(postData);
+	var access_key = POST.access_key; 
+	var secret_key = POST.secret; 
+	var url = POST.flow_url;
+	var resource = POST.resource;
+    console.log("Request handler 'sendData' was called.");
+	postData = postData.replace('sendData', 'survey_instances');
+	
+	authentication.requestflowapi(query, postData, function(flowdata) {
+	console.log("Survey instances received! Begining data gathering for DHIS2 ");
+	
+	var content = JSON.parse(flowdata);
+	var questions = "";	
+	var surveyInstanceIdTbl = [];
+	var dxfheader ='"dataelement","period","orgunit","categoryoptioncombo","attributeoptioncombo","value"\n';	
+	var dxfend = '</wstxns1:dataValueSet>';
+	var dxfcontent ='';
+	var orgunit ='';
+	var period ='';
+	var categorycombo ='';
+		
+	function writeEndXMLTag(){
+		fs.appendFile('./flowdata.xml', dxfend, function (err) {
+			if (err) throw err;
+			console.log('The "closing tag" was appended to file!');
+		});
+	}
+
+	for (var i=0; i< content.survey_instances.length; i++){
+		console.log("contents.length :" + content.survey_instances.length + " keyId: " + content.survey_instances[i].keyId);
+		surveyInstanceIdTbl[i] = content.survey_instances[i].keyId;
+	}
+		
+	fs.writeFile('./flowdata.csv', dxfheader, function (err) {
+		if (err) throw err;
+		console.log('Header of xml data file wrote!');
+	});
+
+	postData = postData.replace('survey_instances', 'question_answers');
+	var count = surveyInstanceIdTbl.length -1;
+	surveyInstanceIdTbl.forEach (function (keyId, index){
+		
+		query = "surveyInstanceId=" + keyId;
+		authentication.requestflowapi(query, postData, function(flowdata) {
+			questions = JSON.parse(flowdata);
+			var csv = '';
+			dxfcontent = '';
+			
+			// getting period ans orgunit in the instance 
+			for(var i in questions.question_answers) {
+				if(questions.question_answers[i].type === 'CASCADE') {
+					orgunit = questions.question_answers[i].value;
+				}
+				if(questions.question_answers[i].textualQuestionId === 'period') {
+					period = questions.question_answers[i].value;
+				}
+			}
+			
+			orgunit = 'bDd1OyowFZT';
+			
+			// getting values and dataElements
+			var nbQ = questions.question_answers.length - 1;
+			for (var j in questions.question_answers) {
+				if(questions.question_answers[j].textualQuestionId !== 'period' && questions.question_answers[j].type !== 'CASCADE'){
+					if(questions.question_answers[j].value === 'Yes'){ questions.question_answers[j].value = true; }
+					else if(questions.question_answers[j].value === 'No'){ questions.question_answers[j].value = false; }
+					dxfcontent += '"'+ questions.question_answers[j].textualQuestionId + '","'+
+									period + '","' + orgunit + '","HNjsQJi1xxW","HNjsQJi1xxW","'  + questions.question_answers[j].value + '"\n';
+				}
+			}
+
+			addToFile(dxfcontent, function(message) {
+				if(index === count){
+					sendToDHIS2(function(message) {
+						message = JSON.parse(message);
+						var conflictitems = message.importSummary.conflicts[0].conflict ;
+						var listConflicts = '';
+						for(var i in conflictitems){
+							listConflicts += '<p>'+ conflictitems[i].$.object +' : \t'+ conflictitems[i].$.value +'</p>';
+						} 
+						
+						var body = '<html>'+
+										'<head>'+
+										'</head>'+
+										'<body>'+
+											'<p>'+ message.importSummary.status[0] +' : '+ message.importSummary.description[0] +'</p>' +
+											'<br/>'+
+											'<p>Imported : \t'+ message.importSummary.dataValueCount[0].$.imported +'</p>'+
+											'<p>Updated : \t'+ message.importSummary.dataValueCount[0].$.updated +'</p>'+
+											'<p>ignored : \t'+ message.importSummary.dataValueCount[0].$.ignored +'</p>'+
+											'<p>Deleted : \t'+ message.importSummary.dataValueCount[0].$.deleted +'</p>'+
+											'<br/>'+
+											listConflicts +
+										'</body>'+
+									'</html>';
+			
+						response.writeHead(200, {"Content-Type": "text/html"});
+						response.write(body);
+						response.end();
+					});
+				}
+			});
+
+		});
+		
+		function sendToDHIS2(callback){
+			var cmd = 'curl --data-binary @flowdata.csv "https://aftest.dhis2.net/api/dataValueSets" -H "Content-Type:application/csv" '+
+					  '-u ldiphoorn:Waterpoint1 -v';
+			exec(cmd,{ timeout: 10000, maxBuffer: 20000*1024 }, function (error, stdout, stderr) {
+				console.log('stdout: ', stdout);
+				console.log('stderr: ', stderr);
+				
+				if (error !== null) {
+					console.log('exec error: ', error);
+				} else if(stdout !== null) {
+					parseString(stdout, function (err, result) {
+						console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@' +  JSON.stringify(result));
+						//var dhis2jsonresult = JSON.parse(result);
+						//console.log(dhis2jsonresult);
+						callback(JSON.stringify(result));
+					});
+					
+				}
+			});
+		}
+
+		function addToFile(dxfcontent, callback) {
+			fs.appendFile('./flowdata.csv', dxfcontent, function (err) {
+				if (err) throw err;
+				console.log('The "data to append" was appended to file!');
+				callback();
+			});
+		}
+	});
+}); 
+} 
 
 exports.start = start;
 exports.survey_instances = survey_instances;
