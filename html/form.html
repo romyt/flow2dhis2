@@ -2,35 +2,72 @@
 <!DOCTYPE html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Untitled Document</title>
+<title>Flow2DHIS2</title>
 </head>
  
 <body>
+	<h1>
+		Welcome to FLOW2DHIS2 tool!
+	</h1>
+	<h3>
+		Using this tool, you will be able to: 
+		<ul>
+			<li>connect to a Flow server</li>
+			<li>retreive Flow surveys</li>
+			<li>retrieve Flow question answers</li>
+			<li>Send the selected Flow data to a DHIS2 instance </li>
+		</ul>
+	</h3>
+	<h4>
+		Please provide the information bellow to get started.
+	</h4>
+	<hr/>
 <form id="form1" name="form1" method="post" action="getData">
   <p>
-  <label><label>Please Fill up the form and submit.<br />
+  	<label><label>Flow settings:
+  </p>
+  <p>
   </label>Please enter Flow instance URL without "http://":
-  <input type="text" name="flow_url" id="flow_url" placeholder="Please Input Flow URL" />
-    </label>
+  	<input type="text" name="flow_url" id="flow_url" placeholder="Please Input Flow URL" required="required"/>
+  </label>
   </p>
   <p>
     <label>Please enter the Flow resource you are requesting:
-        <input type="text" name="resource" id="resource" placeholder="Please Input resource" />
+        <input type="text" name="resource" id="resource" placeholder="Please Input resource" required="required"/>
     </label>
   </p>
   <p>
 	<label>Please enter your secret key:
-		<input type="text" name="secret" id="secret" placeholder="Please Input secret key" />
+		<input type="text" name="secret" id="secret" placeholder="Please Input secret key" required="required"/>
 	</label>
   </p>
   <p>
 	<label>Please enter your access key:
-		<input type="text" name="access_key" id="access_key" placeholder="Please Input access key" />
+		<input type="text" name="access_key" id="access_key" placeholder="Please Input access key" required="required"/>
+	</label>
+  </p>
+	<p>
+		<hr />
+	<p>
+		<lable> DHIS2 settings:</lable>
+	</p>	
+	<label>Please enter the DHIS2 server URL:
+		<input type="text" name="dhis_url" id="access_key" placeholder="Please Input DHIS2 URL" required="required"/>
+	</label>
+  </p>
+	<p>
+	<label>Please enter your DHIS2 username:
+		<input type="text" name="username" id="access_key" placeholder="Please Input DHIS2 username" required="required"/>
+	</label>
+  </p>
+	<p>
+	<label>Please enter your DHIS2 password:
+		<input type="text" name="password" id="access_key" placeholder="Please Input DHIS2 password" required="required"/>
 	</label>
   </p>
   <p>
     <label>
-      <input type="submit" name="submit" id="submit" value="Submit" />
+      <input type="submit" name="submit" id="submit" value="Submit" required="required"/>
     </label>
   </p>
 </form>
