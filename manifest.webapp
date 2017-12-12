@@ -1,0 +1,23 @@
+{
+    "version": "1.0",
+    "name": "flow2dhis2",
+    "description": "Tool to send data collected using AKVO Flow to DHIS2",
+    "icons": {
+            "48": "img/icon.png"
+    },
+    "developer": {
+        "url": "http://tohouri.com",
+        "name": "Romain-ROlland TOHOURI",
+        "company": null,
+        "email": null
+    },
+    "activities": {
+        "dhis": {
+            "href": "*"
+        }
+    },
+    "launchUrl": null,
+    "launch_path": "index.js",
+    "installs_allowed_from": null,
+    "default_locale": "en"
+}
